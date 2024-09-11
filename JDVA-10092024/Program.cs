@@ -15,30 +15,59 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+var proveedor = new List<Proveedores>();
 
-var summaries = new[]
+app.MapGet("/proveedores", () =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    return proveedor; 
+});
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/proveedores/{id}", (int id) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+    var prov = proveedor.FirstOrDefault(p => p.Id == id);
+    return prov;
+});
+
+app.MapPost("/proveedores", (Proveedores pPoveedores) =>
+{
+    proveedor.Add(pPoveedores);
+    return Results.Ok();
+});
+app.MapPut("/proveedores/{id}", (int id, Proveedores pProveedores) =>
+{
+    var existingProv = proveedor.FirstOrDefault(p => p.Id == id);
+    if (existingProv != null)
+    {
+        existingProv.Nombre = pProveedores.Nombre;
+        existingProv.Apellido = pProveedores.Apellido;
+        existingProv.Correo = pProveedores.Correo;
+        return Results.Ok();
+    }
+    else
+    {
+        return Results.NotFound();
+    }
+});
+app.MapDelete("/proveedores/{id}", (int id) =>
+{
+    var existingProv = proveedor.FirstOrDefault(p => p.Id == id);
+    if (existingProv != null)
+    {
+        proveedor.Remove(existingProv);
+        return Results.Ok();
+    }
+    else
+    {
+        return Results.NotFound();
+    }
+});
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+internal class Proveedores
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    public int Id { get; set; }
+    public string Nombre { get; set; }
+    public string Apellido { get; set; }
+    public string Correo { get; set; }
 }
